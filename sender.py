@@ -1,18 +1,16 @@
 import traceback
-from packet import Packet
-from packet import PacketType
 import socket
 import pickle
-from timer import Timer
 import sys
 import logging
 import configparser
+from timer import Timer
+from packet import *
 
 logging.basicConfig(filename='sender.log',
                     encoding='utf-8',
                     level=logging.INFO,
                     format="%(asctime)s - %(message)s")
-
 
 class Sender:
     """
