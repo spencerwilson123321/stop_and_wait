@@ -1,9 +1,9 @@
 import traceback
-import socket
 import pickle
 import sys
 import logging
 import configparser
+from socket import socket, AF_INET, SOCK_DGRAM
 from timer import Timer
 from packet import *
 
@@ -37,7 +37,7 @@ class Sender:
         self.window = []
         self.num_acks_received = 0
         self.num_timeouts = 0
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.socket = socket(AF_INET, SOCK_DGRAM)
         self.socket.bind(self.sender_address)
         self.socket.setblocking(0)
         
