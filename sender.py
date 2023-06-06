@@ -37,9 +37,9 @@ class Sender:
         self.window = []
         self.num_acks_received = 0
         self.num_timeouts = 0
-        self.sender_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sender_socket.bind(self.sender_address)
-        self.sender_socket.setblocking(0)
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.socket.bind(self.sender_address)
+        self.socket.setblocking(0)
         
         # This is the sequence number of the biggest ack received through the transfer.
         self.last_biggest_ack = -1
@@ -81,7 +81,7 @@ class Sender:
         # need to create a socket with connection, and then send.
         for x in self.window:
             # for each x serialize each object and send to receiver using senderSocket.
-            self.sender_socket.sendto(pickle.dumps(x), self.networK_address)
+            self.socket.sendto(pickle.dumps(x), self.networK_address)
             # Also make a print statement to the console so we can see what is being sent.
             print(f"Sending: {x}")
             logging.info(f"Sending: {x}")
@@ -95,7 +95,7 @@ class Sender:
         self.num_timeouts = self.num_timeouts + 1
 
     def receive_packet(self):
-        data, addr = self.sender_socket.recvfrom(1024)
+        data, addr = self.socket.recvfrom(1024)
         return pickle.loads(data), addr
 
     def update_retransmission_timer_info(self, actual_rtt):
@@ -113,7 +113,7 @@ class Sender:
     def send_eot(self):
         # Send the EOT packet once all the data has been successfully transmitted to the receiver.
         eot_pkt = Packet(PacketType.EOT, 0, self.receiver_address)
-        self.sender_socket.sendto(pickle.dumps(eot_pkt), self.networK_address)
+        self.socket.sendto(pickle.dumps(eot_pkt), self.networK_address)
 
     def set_state(self, state):
         self.state = state
@@ -173,7 +173,7 @@ def main():
     logging.info(f"Total Acks received: {sender.num_acks_received}")
     logging.info(f"Total Pkts sent: {sender.total_pkts_sent}")
     logging.info(f"Total number of timeouts: {sender.num_timeouts}")
-    sender.sender_socket.close()
+    sender.socket.close()
 
 
 if __name__ == '__main__':
