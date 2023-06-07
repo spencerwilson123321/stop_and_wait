@@ -12,26 +12,27 @@ logging.basicConfig(filename='sender.log',
                     level=logging.INFO,
                     format="%(asctime)s - %(message)s")
 
+
 class Sender:
     """
         The Sender class has all the properties and behaviours to implement the sender portion of the
         send-and-wait protocol. 
     """
 
+    # Retransmission Timer Constants
+    ALPHA = 0.125
+    BETA = 0.25
+    K = 4
+
     def __init__(self, configuration):
         self.receiver_address = (configuration["receiver"]["ip"], int(configuration["receiver"]["port"]))
         self.sender_address = (configuration["sender"]["ip"], int(configuration["sender"]["port"]))
-        self.networK_address = (configuration["network"]["ip"], int(configuration["network"]["port"]))
-        
-        # alpha - gain constant used in retransmit timer.
-        self.alpha = 0.8
-        self.predicted_rtt = 80.0
-        self.predicted_deviation = 50.0
-        
-        # Time out threshold for retransmission timer.
-        self.tot = self.predicted_deviation + self.predicted_rtt
         self.timer = Timer()
-        
+
+        self.rto = 1.0 # Retransmission Timeout Threshold
+        self.srtt = None # Smoothed RTT
+        self.vrtt = None # RTT Variance
+
         # The sender window.
         self.num_acks_received = 0
         self.num_timeouts = 0
@@ -41,36 +42,15 @@ class Sender:
         self.PAYLOAD_SIZE = 512
         self.total_pkts_sent = 0
 
-    def start_timer(self):
-        self.timer.start()
-
-    def stop_timer(self):
-        self.timer.stop()
-
-    def check_timer(self):
-        return self.timer.check_time()
-
-    def increment_acks_received(self):
-        self.num_acks_received = self.num_acks_received+1
-
-    def increment_num_timeouts(self):
-        self.num_timeouts = self.num_timeouts + 1
-
-    def receive_packet(self):
-        data, addr = self.socket.recvfrom(1024)
-        return pickle.loads(data), addr
-
-    def update_retransmission_timer_info(self, actual_rtt):
-        # avg RTT using techniques from Jacobson's paper
-        actual_deviation = abs(self.predicted_rtt - actual_rtt)
-        self.predicted_rtt = self.predicted_rtt*self.alpha + (1.0 - self.alpha)*actual_rtt
-        self.predicted_deviation = self.alpha*self.predicted_deviation + (1.0 - self.alpha)*actual_deviation
-        # Update timeout timer
-        self.tot = (10.0*self.predicted_deviation) + (1.5*self.predicted_rtt)
-
-    def exponential_back_off_timer(self):
-        # When there is a timeout, increase the retransmission timer exponentially.
-        self.tot = self.tot*2
+    def on_rtt_measured(self, rtt):
+        if self.srtt is None:
+            self.srtt = rtt
+            self.vrtt = rtt/2
+            self.rto = self.srtt + K*vrtt
+        else:
+            self.vrtt = (1-BETA)*self.vrtt + BETA*abs(self.srtt - rtt)
+            self.srtt = (1-ALPHA)*self.srtt + ALPHA*rtt
+            self.rto = self.srtt + K*self.vrtt
 
     def transmit(self, path=""):
         
