@@ -22,7 +22,6 @@ class Sender:
         self.receiver_address = (configuration["receiver"]["ip"], int(configuration["receiver"]["port"]))
         self.sender_address = (configuration["sender"]["ip"], int(configuration["sender"]["port"]))
         self.networK_address = (configuration["network"]["ip"], int(configuration["network"]["port"]))
-        self.window_size = 4
         
         # alpha - gain constant used in retransmit timer.
         self.alpha = 0.8
@@ -34,28 +33,12 @@ class Sender:
         self.timer = Timer()
         
         # The sender window.
-        self.window = []
         self.num_acks_received = 0
         self.num_timeouts = 0
         self.socket = socket(AF_INET, SOCK_DGRAM)
         self.socket.bind(self.sender_address)
         self.socket.setblocking(0)
-        
-        # This is the sequence number of the biggest ack received through the transfer.
-        self.last_biggest_ack = -1
-        
-        # This is the highest sequence number from the set of packets
-        # which were sent to the receiver. i.e. if packets 0,1,2,3 were sent
-        # then this value = 3. Then we can say if we receive ack = 3 then send
-        # more packets. This way we don't end up waiting for all acks.
-        self.last_highest_sequence_number = -2
 
-        # The sequence number of the last packet to send.
-        self.ending_sequence_number = numPacketsToSend
-        
-        # state = 0 --> data to send.
-        # state = 1 --> no data to send.
-        self.state = 0
         self.total_pkts_sent = 0
 
     def start_timer(self):
@@ -66,27 +49,6 @@ class Sender:
 
     def check_timer(self):
         return self.timer.check_time()
-
-    def generate_window(self):
-        """ 
-            Generates the next packets to send based on what packets have been acknowledged so far. 
-        """
-        self.total_pkts_sent = self.total_pkts_sent + self.window_size
-        for x in range(1, self.window_size+1):
-            if x == self.window_size:
-                self.last_highest_sequence_number = self.last_biggest_ack+x
-            self.window.append(Packet(PacketType.DATA, self.last_biggest_ack+x, self.receiver_address))
-
-    def send_all_in_window(self):
-        # need to create a socket with connection, and then send.
-        for x in self.window:
-            # for each x serialize each object and send to receiver using senderSocket.
-            self.socket.sendto(pickle.dumps(x), self.networK_address)
-            # Also make a print statement to the console so we can see what is being sent.
-            print(f"Sending: {x}")
-            logging.info(f"Sending: {x}")
-        # clear window afterwards
-        self.window = []
 
     def increment_acks_received(self):
         self.num_acks_received = self.num_acks_received+1
@@ -109,17 +71,6 @@ class Sender:
     def exponential_back_off_timer(self):
         # When there is a timeout, increase the retransmission timer exponentially.
         self.tot = self.tot*2
-
-    def send_eot(self):
-        # Send the EOT packet once all the data has been successfully transmitted to the receiver.
-        eot_pkt = Packet(PacketType.EOT, 0, self.receiver_address)
-        self.socket.sendto(pickle.dumps(eot_pkt), self.networK_address)
-
-    def set_state(self, state):
-        self.state = state
-
-    def get_state(self):
-        return self.state
 
 
 def main():
