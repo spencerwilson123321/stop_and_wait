@@ -6,18 +6,22 @@ from struct import pack, unpack
 # length:  offset 2 (Third byte) 0-255 bytes of data per data packet. 
 # data: length bytes starting at offset 3.
 
-def get_packet_type(pkt: bytes):
-    return pkt[0]
+def parse_packet(pkt: bytes) -> Packet:
+    try:
+        fields = unpack("!BBB", pkt[0:3])
+        payload = pkt[3:]
+    except Exception:
+        return None
+    return Packet(fields[0], fields[1], fields[2], payload)
 
-def get_packet_number(pkt: bytes):
-    return pkt[1]
 
-def get_packet_data_length(pkt: bytes):
-    return pkt[2]
-
-def get_packet_data(pkt: bytes):
-    len = pkt[2]
-    return pkt[3:3+len]
-
-def create_packet(pkt_type: int, number: int, length: int, data: bytes) -> bytes:
-    return pack("BBB", pkt_type, number, length) + data
+class Packet:
+    
+    def __init__(self, pkt_type, number, length, data):
+        self.pkt_type = pkt_type
+        self.number = number
+        self.length = length
+        self.data = data
+    
+    def serialize(self):
+        return pack("!BBB", self.pkt_type, self.number, self.length) + self.data
