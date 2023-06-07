@@ -7,11 +7,8 @@ from struct import pack, unpack
 # data: length bytes starting at offset 3.
 
 def parse_packet(pkt: bytes) -> Packet:
-    try:
-        fields = unpack("!BBB", pkt[0:3])
-        payload = pkt[3:]
-    except Exception:
-        return None
+    fields = unpack("!BBB", pkt[0:3])
+    payload = pkt[3:]
     return Packet(fields[0], fields[1], fields[2], payload)
 
 
