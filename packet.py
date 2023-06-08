@@ -11,6 +11,11 @@ def parse_packet(pkt: bytes) -> Packet:
     payload = pkt[3:]
     return Packet(fields[0], fields[1], fields[2], payload)
 
+TYPE_MAP = {
+    0:"EOT",
+    1:"DATA",
+    2:"ACK"
+}
 
 class Packet:
     
@@ -19,6 +24,12 @@ class Packet:
         self.number = number
         self.length = length
         self.data = data
-    
+
+    def type_to_string(self):
+        return TYPE_MAP[self.pkt_type]
+
     def serialize(self):
         return pack("!BBB", self.pkt_type, self.number, self.length) + self.data
+
+    def __repr__(self):
+        return f"Packet(pkt_type={self.type_to_string}, number={self.number}, length={self.length}, data={self.data})"
