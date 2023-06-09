@@ -3,7 +3,6 @@ import sys
 import traceback
 import logging
 from socket import socket, AF_INET, SOCK_DGRAM
-from timer import Timer
 from packet import *
 
 logging.basicConfig(filename='receiver.log',
