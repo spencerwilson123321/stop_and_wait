@@ -47,7 +47,7 @@ class Sender:
 
         self.socket = socket(AF_INET, SOCK_DGRAM)
         self.socket.bind(self.sender_address)
-        self.socket.setblocking(0)
+        # self.socket.setblocking(0)
         self.PAYLOAD_SIZE = 512
 
         self.current_packet_number = 0
@@ -90,21 +90,25 @@ class Sender:
             self.send(pkt)
 
             # 3. Wait for response and potentially handle timeout.
-            waiting = True
-            self.timer.start()
-            response = None
-            while waiting:
-                # Timeout
-                if self.timer.elapsed_time() >= self.rto:
-                    self.on_timeout()
-                    self.send(pkt)
-                try:
-                    response, address = self.socket.recvfrom(4096)
-                    pkt = parse_packet(response)
-                    print(pkt)
-                    waiting = False
-                except Exception:
-                    continue
+            response, address = self.socket.recvfrom(4096)
+            response = parse_packet(response)
+            print("Received: {response}")
+            bytes_acked += pkt.length
+            # waiting = True
+            # self.timer.start()
+            # response = None
+            # while waiting:
+            #     # Timeout
+            #     if self.timer.elapsed_time() >= self.rto:
+            #         self.on_timeout()
+            #         self.send(pkt)
+            #     try:
+            #         response, address = self.socket.recvfrom(4096)
+            #         pkt = parse_packet(response)
+            #         print(pkt)
+            #         waiting = False
+            #     except Exception:
+            #         continue
 
 
 if __name__ == '__main__':
