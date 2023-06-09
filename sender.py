@@ -94,13 +94,11 @@ class Sender:
             except Exception:
                 continue
     
-
     def increment(self, number):
         if number == 255:
             return 0
         else:
             return number + 1
-
 
     def transmit(self, path=""):
 
@@ -125,7 +123,6 @@ class Sender:
 
         print("EOT received.\nTerminating transmission.")
         self.socket.close()
-        
 
 if __name__ == '__main__':
 
@@ -139,4 +136,3 @@ if __name__ == '__main__':
     except Exception:
         traceback.print_exc(file=sys.stdout)
     sys.exit(-1)
-
