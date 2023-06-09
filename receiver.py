@@ -32,8 +32,8 @@ class Receiver:
             data, address = self.socket.recvfrom(4096)
             pkt = Packet(raw=data)
             ack = Packet(pkt_type=ACK, number=current_packet_number, length=0, data=b"")
-            self.socket.sendto(ack.serialize(), self.sender_address())
-            if packet.type == EOT:
+            self.socket.sendto(ack.serialize(), self.sender_address)
+            if pkt.pkt_type == EOT:
                 eot_received = True
         self.socket.close()
         print("EOT received.\nTerminating connection.")
