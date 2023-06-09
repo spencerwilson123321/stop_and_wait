@@ -56,10 +56,10 @@ class Sender:
         if self.srtt is None:
             self.srtt = rtt
             self.vrtt = rtt/2
-            self.rto = self.srtt + K*vrtt
+            self.rto = self.srtt + self.K*self.vrtt
         else:
-            self.vrtt = (1-BETA)*self.vrtt + BETA*abs(self.srtt - rtt)
-            self.srtt = (1-ALPHA)*self.srtt + ALPHA*rtt
+            self.vrtt = (1-self.BETA)*self.vrtt + self.BETA*abs(self.srtt - rtt)
+            self.srtt = (1-self.ALPHA)*self.srtt + self.ALPHA*rtt
             self.rto = self.srtt + K*self.vrtt
     
     def on_timeout(self):
@@ -109,7 +109,7 @@ class Sender:
             #     except Exception:
             #         continue
         eot = Packet(pkt_type=EOT, number=self.current_packet_number, length=0, data=b"")
-        self.socket.sendto(eot.serializae(), self.receiver_address)
+        self.socket.sendto(eot.serialize(), self.receiver_address)
         response, address = self.socket.recvfrom(4096)
         ack = Packet(raw=response)
         print(f"Received: {ack}")
