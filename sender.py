@@ -1,28 +1,10 @@
 import traceback
 import sys
-import logging
 import time
 import configparser
 from socket import socket, AF_INET, SOCK_DGRAM
 from packet import *
 
-logging.basicConfig(filename='sender.log',
-                    encoding='utf-8',
-                    level=logging.INFO,
-                    format="%(asctime)s - %(message)s")
-
-
-class Timer:
-
-    def __init__(self):
-        self._start_time = None
-
-    def start(self):
-        self._start_time = time.perf_counter()
-    
-    def elapsed_time(self):
-        elapsed_time = time.perf_counter() - self._start_time
-        return float(elapsed_time*1000)
 
 class Sender:
 
@@ -35,7 +17,6 @@ class Sender:
     def __init__(self, configuration):
         self.receiver_address = (configuration["receiver"]["ip"], int(configuration["receiver"]["port"]))
         self.sender_address = (configuration["sender"]["ip"], int(configuration["sender"]["port"]))
-        self.timer = Timer()
 
         self.rto = 1.0 # Retransmission Timeout Threshold
         self.srtt = None # Smoothed RTT
