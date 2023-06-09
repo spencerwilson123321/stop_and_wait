@@ -23,9 +23,6 @@ class Receiver:
         self.socket.bind(self.receiver_address)
 
     def run_until_done(self):
-        # The main loop checks for packets and upon receiving a packet, it generates an ack, and sends
-        # the ack to the destination. If the packet is the EOT packet then that means the sender has transferred
-        # all of it's data and the receiver shuts down.
         eot_received = False
         print("Waiting for packets...")
         while not eot_received:
