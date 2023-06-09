@@ -1,14 +1,9 @@
 import configparser
 import sys
 import traceback
-import logging
 from socket import socket, AF_INET, SOCK_DGRAM
 from packet import *
 
-logging.basicConfig(filename='receiver.log',
-                    encoding='utf-8',
-                    level=logging.INFO,
-                    format="%(asctime)s - %(message)s")
 
 class Receiver:
 
@@ -34,15 +29,12 @@ class Receiver:
         print("EOT received.\nTerminating connection.")
 
 
-def main():
-    CONFIG = configparser.ConfigParser()
-    CONFIG.read("config.ini")
-    receiver = Receiver(CONFIG)
-    receiver.run_until_done()
-
 if __name__ == '__main__':
     try:
-        main()
+        CONFIG = configparser.ConfigParser()
+        CONFIG.read("config.ini")
+        receiver = Receiver(CONFIG)
+        receiver.run_until_done()
     except KeyboardInterrupt:
         print("\nShutting down receiver...")
     except Exception:
