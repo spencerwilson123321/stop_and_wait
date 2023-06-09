@@ -59,7 +59,7 @@ class Sender:
         else:
             self.vrtt = (1-self.BETA)*self.vrtt + self.BETA*abs(self.srtt - rtt)
             self.srtt = (1-self.ALPHA)*self.srtt + self.ALPHA*rtt
-            self.rto = self.srtt + K*self.vrtt
+            self.rto = self.srtt + self.K*self.vrtt
     
     def on_timeout(self):
         self.timed_out = True
