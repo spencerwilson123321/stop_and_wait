@@ -39,4 +39,4 @@ class Packet:
         return pack("!BBB", self.pkt_type, self.number, self.length) + self.data
 
     def __repr__(self):
-        return f"Packet(pkt_type={self.type_to_string()}, number={self.number}, length={self.length}, data={self.data})"
+        return f"Packet(pkt_type={self.type_to_string()}, number={self.number}, length={self.length})"
