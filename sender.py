@@ -20,7 +20,7 @@ class Timer:
 
     def start(self):
         self._start_time = time.perf_counter()
-
+    
     def elapsed_time(self):
         elapsed_time = time.perf_counter() - self._start_time
         return float(elapsed_time*1000)
@@ -93,21 +93,18 @@ class Sender:
             waiting = True
             self.timer.start()
             response = None
-            # while waiting:
-            #     pass
-                # if self.timer.elapsed_time() >= self.rto:
-                #     self.on_timeout()
-                #     self.send(pkt)
-                # try:
-                #     response, address = self.socket.recvfrom(4096)
-                #     pkt = parse_packet(response)
-                #     # If old ack, skip.
-                #     if pkt.number != self.current_packet_number:
-                #         continue
-                #     else:
-                #         waiting = False
-                # except Exception:
-                #     continue
+            while waiting:
+                # Timeout
+                if self.timer.elapsed_time() >= self.rto:
+                    self.on_timeout()
+                    self.send(pkt)
+                try:
+                    response, address = self.socket.recvfrom(4096)
+                    pkt = parse_packet(response)
+                    print(pkt)
+                    waiting = False
+                except Exception:
+                    continue
 
 
 if __name__ == '__main__':
