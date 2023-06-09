@@ -34,6 +34,7 @@ class Sender:
     ALPHA = 0.125
     BETA = 0.25
     K = 4
+    BUFFSIZE = 4096
 
     def __init__(self, configuration):
         self.receiver_address = (configuration["receiver"]["ip"], int(configuration["receiver"]["port"]))
@@ -46,8 +47,9 @@ class Sender:
 
         self.socket = socket(AF_INET, SOCK_DGRAM)
         self.socket.bind(self.sender_address)
-        self.PAYLOAD_SIZE = 255
+        self.socket.setblocking(0)
 
+        self.PAYLOAD_SIZE = 255
         self.current_packet_number = 0
         self.timed_out = False
 
@@ -72,31 +74,59 @@ class Sender:
 
     def send(self, packet):
         self.socket.sendto(packet.serialize(), self.receiver_address)
+        start = time.perf_counter()
+        waiting = True
+        while waiting:
+            if time.perf_counter() - start >= self.rto:
+                self.on_timeout()
+                self.socket.sendto(packet.serialize(), self.receiver_address)
+                start = time.perf_counter()
+            try:
+                response, address = self.socket.recvfrom(self.BUFFSIZE)
+                timestamp = time.perf_counter()
+                ack = Packet(raw=response)
+                print(f"Received: {ack}")
+                if ack.number == packet.number:
+                    waiting = False
+                    # Update RTT if we did not timeout.
+                    if not self.timed_out:
+                        rtt = timestamp - start
+                        self.on_rtt_measured(rtt)
+                    # Return the number of bytes acked.
+                    self.timed_out = False
+                    return packet.length
+            except Exception:
+                continue
+    
+
+    def increment(self, number):
+        if number == 255:
+            return 0
+        else:
+            return number + 1
+
 
     def transmit(self, path=""):
+
         data = self.load_data(path)
         bytes_acked = 0
         total_bytes = len(data)
+        current_packet_number = 0
+
         while bytes_acked < total_bytes:
             
             payload = data[0:self.PAYLOAD_SIZE]
             data = data[self.PAYLOAD_SIZE:]
-            pkt = Packet(DATA, self.current_packet_number, len(payload), payload)
-            
+
+            pkt = Packet(DATA, current_packet_number, len(payload), payload)
             print(f"Sending: {pkt}")
-            self.send(pkt)
+            bytes_acked += self.send(pkt)
+            current_packet_number = self.increment(current_packet_number)
 
-            response, address = self.socket.recvfrom(4096)
-            ack = Packet(raw=response)
-            print(f"Received: {ack}")
-            bytes_acked += pkt.length
-
-        eot = Packet(pkt_type=EOT, number=self.current_packet_number, length=0, data=b"")
+        eot = Packet(pkt_type=EOT, number=current_packet_number, length=0, data=b"")
         print(f"Sending: {eot}")
-        self.socket.sendto(eot.serialize(), self.receiver_address)
-        response, address = self.socket.recvfrom(4096)
-        ack = Packet(raw=response)
-        print(f"Received: {ack}")
+        num_acked = self.send(eot)
+
         print("EOT received.\nTerminating transmission.")
         self.socket.close()
         
