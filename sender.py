@@ -100,7 +100,7 @@ class Sender:
 
         eot = Packet(pkt_type=EOT, number=current_packet_number, length=0, data=b"")
         print(f"Sending: {eot}")
-        num_acked = self.send(eot)
+        self.send(eot)
 
         print("EOT received.\nTerminating transmission.")
         self.socket.close()
