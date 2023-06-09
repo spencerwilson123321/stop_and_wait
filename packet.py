@@ -18,7 +18,7 @@ class Packet:
         ACK:"ACK"
     }
 
-    def __init__(self, pkt_type: int, number: int, length: int, data: int, raw: bytes=None):
+    def __init__(self, pkt_type: int = 0, number: int = 0, length: int = 0, data: int = b"", raw: bytes=None):
         if raw:
             fields = unpack("!BBB", raw[0:3])
             payload = raw[3:]
