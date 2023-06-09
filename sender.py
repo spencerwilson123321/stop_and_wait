@@ -46,7 +46,7 @@ class Sender:
 
         self.socket = socket(AF_INET, SOCK_DGRAM)
         self.socket.bind(self.sender_address)
-        self.PAYLOAD_SIZE = 512
+        self.PAYLOAD_SIZE = 255
 
         self.current_packet_number = 0
         self.timed_out = False
