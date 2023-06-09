@@ -46,7 +46,6 @@ class Sender:
 
         self.socket = socket(AF_INET, SOCK_DGRAM)
         self.socket.bind(self.sender_address)
-        # self.socket.setblocking(0)
         self.PAYLOAD_SIZE = 512
 
         self.current_packet_number = 0
@@ -80,34 +79,18 @@ class Sender:
         total_bytes = len(data)
         while bytes_acked < total_bytes:
             
-            # 1. Construct packet.
             payload = data[0:self.PAYLOAD_SIZE]
             data = data[self.PAYLOAD_SIZE:]
             pkt = Packet(0, self.current_packet_number, len(payload), payload)
             
-            # 2. Send packet.
+            print(f"Sending: {pkt}")
             self.send(pkt)
 
-            # 3. Wait for response and potentially handle timeout.
             response, address = self.socket.recvfrom(4096)
             ack = Packet(raw=response)
             print(f"Received: {ack}")
             bytes_acked += pkt.length
-            # waiting = True
-            # self.timer.start()
-            # response = None
-            # while waiting:
-            #     # Timeout
-            #     if self.timer.elapsed_time() >= self.rto:
-            #         self.on_timeout()
-            #         self.send(pkt)
-            #     try:
-            #         response, address = self.socket.recvfrom(4096)
-            #         pkt = parse_packet(response)
-            #         print(pkt)
-            #         waiting = False
-            #     except Exception:
-            #         continue
+
         eot = Packet(pkt_type=EOT, number=self.current_packet_number, length=0, data=b"")
         self.socket.sendto(eot.serialize(), self.receiver_address)
         response, address = self.socket.recvfrom(4096)
