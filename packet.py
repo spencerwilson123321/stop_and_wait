@@ -6,25 +6,31 @@ from struct import pack, unpack
 # length:  offset 2 (Third byte) 0-255 bytes of data per data packet. 
 # data: length bytes starting at offset 3.
 
-def parse_packet(pkt: bytes) -> Packet:
-    fields = unpack("!BBB", pkt[0:3])
-    payload = pkt[3:]
-    return Packet(fields[0], fields[1], fields[2], payload)
-
+EOT = 0
+DATA = 1
+ACK = 2
 
 class Packet:
 
     TYPE_MAP = {
-        0:"EOT",
-        1:"DATA",
-        2:"ACK"
+        EOT:"EOT",
+        DATA:"DATA",
+        ACK:"ACK"
     }
 
-    def __init__(self, pkt_type, number, length, data):
-        self.pkt_type = pkt_type
-        self.number = number
-        self.length = length
-        self.data = data
+    def __init__(self, pkt_type: int, number: int, length: int, data: int, raw: bytes=None):
+        if raw:
+            fields = unpack("!BBB", raw[0:3])
+            payload = raw[3:]
+            self.pkt_type = fields[0]
+            self.number = fields[1]
+            self.length = fields[2]
+            self.data = payload
+        else:
+            self.pkt_type = pkt_type
+            self.number = number
+            self.length = length
+            self.data = data
 
     def type_to_string(self):
         return self.TYPE_MAP[self.pkt_type]
