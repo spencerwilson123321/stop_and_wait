@@ -11,10 +11,6 @@ logging.basicConfig(filename='receiver.log',
                     format="%(asctime)s - %(message)s")
 
 class Receiver:
-    """
-        The Receiver class contains all the properties and behaviours needed to implement
-        the receiver protocols in the send-and-wait protocol.
-    """
 
     def __init__(self, configuration):
         self.receiver_address = (configuration["receiver"]["ip"], int(configuration["receiver"]["port"]))

@@ -25,10 +25,6 @@ class Timer:
         return float(elapsed_time*1000)
 
 class Sender:
-    """
-        The Sender class has all the properties and behaviours to implement the sender portion of the
-        send-and-wait protocol. 
-    """
 
     # Retransmission Timer Constants
     ALPHA = 0.125
