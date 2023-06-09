@@ -5,7 +5,6 @@ import time
 import configparser
 from socket import socket, AF_INET, SOCK_DGRAM
 from packet import *
-from os.path import isFile
 
 logging.basicConfig(filename='sender.log',
                     encoding='utf-8',
@@ -82,8 +81,8 @@ class Sender:
         while bytes_acked < total_bytes:
             
             # 1. Construct packet.
-            payload = data[0:PAYLOAD_SIZE]
-            data = data[PAYLOAD_SIZE:]
+            payload = data[0:self.PAYLOAD_SIZE]
+            data = data[self.PAYLOAD_SIZE:]
             pkt = Packet(0, self.current_packet_number, len(payload), payload)
             
             # 2. Send packet.
@@ -91,8 +90,8 @@ class Sender:
 
             # 3. Wait for response and potentially handle timeout.
             response, address = self.socket.recvfrom(4096)
-            response = parse_packet(response)
-            print("Received: {response}")
+            ack = Packet(raw=response)
+            print(f"Received: {ack}")
             bytes_acked += pkt.length
             # waiting = True
             # self.timer.start()
@@ -109,7 +108,14 @@ class Sender:
             #         waiting = False
             #     except Exception:
             #         continue
-
+        eot = Packet(pkt_type=EOT, number=self.current_packet_number, length=0, data=b"")
+        self.socket.sendto(eot.serializae(), self.receiver_address)
+        response, address = self.socket.recvfrom(4096)
+        ack = Packet(raw=response)
+        print(f"Received: {ack}")
+        print("EOT received.\nTerminating transmission.")
+        self.socket.close()
+        
 
 if __name__ == '__main__':
 
