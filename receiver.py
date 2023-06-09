@@ -28,10 +28,13 @@ class Receiver:
         # all of it's data and the receiver shuts down.
         eot_received = False
         current_packet_number = 0
+        print("Waiting for packets...")
         while not eot_received:
             data, address = self.socket.recvfrom(4096)
             pkt = Packet(raw=data)
+            print(f"Received: {pkt}")
             ack = Packet(pkt_type=ACK, number=current_packet_number, length=0, data=b"")
+            print(f"Sending: {ack}")
             self.socket.sendto(ack.serialize(), self.sender_address)
             if pkt.pkt_type == EOT:
                 eot_received = True

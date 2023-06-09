@@ -81,7 +81,7 @@ class Sender:
             
             payload = data[0:self.PAYLOAD_SIZE]
             data = data[self.PAYLOAD_SIZE:]
-            pkt = Packet(0, self.current_packet_number, len(payload), payload)
+            pkt = Packet(DATA, self.current_packet_number, len(payload), payload)
             
             print(f"Sending: {pkt}")
             self.send(pkt)
@@ -92,6 +92,7 @@ class Sender:
             bytes_acked += pkt.length
 
         eot = Packet(pkt_type=EOT, number=self.current_packet_number, length=0, data=b"")
+        print(f"Sending: {eot}")
         self.socket.sendto(eot.serialize(), self.receiver_address)
         response, address = self.socket.recvfrom(4096)
         ack = Packet(raw=response)
@@ -106,7 +107,7 @@ if __name__ == '__main__':
         CONFIG = configparser.ConfigParser()
         CONFIG.read("config.ini")
         sender = Sender(CONFIG)
-        sender.transmit("test.txt")
+        sender.transmit(sys.argv[1])
     except KeyboardInterrupt:
         print("\nShutting down sender...")
     except Exception:
