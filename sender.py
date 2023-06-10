@@ -2,6 +2,7 @@ import traceback
 import sys
 import time
 import configparser
+import os
 from socket import socket, AF_INET, SOCK_DGRAM
 from packet import *
 
@@ -111,6 +112,18 @@ if __name__ == '__main__':
         CONFIG = configparser.ConfigParser()
         CONFIG.read("config.ini")
         sender = Sender(CONFIG)
+
+        try:
+            file = sys.argv[1]
+        except Exception:
+            print("Missing program argument.")
+            print("Usage: ./sender.py <filepath>")
+            exit(1)
+        
+        if not os.path.isfile(file):
+            print(f"File not found: {file}")    
+            exit(1)
+
         sender.transmit(sys.argv[1])
     except KeyboardInterrupt:
         print("\nShutting down sender...")
