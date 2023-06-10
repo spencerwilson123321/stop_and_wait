@@ -45,10 +45,6 @@ class Sender:
         self.timed_out = True
         self.rto *= 2 # Double Retransmission Timeout Threshold
 
-    def load_data(self, path) -> bytes:
-        with open(path, "rb") as f:
-            data = f.read()
-        return data
 
     def send(self, packet):
         self.socket.sendto(packet.serialize(), self.receiver_address)
@@ -84,7 +80,9 @@ class Sender:
 
     def transmit(self, path=""):
 
-        data = self.load_data(path)
+        with open(path, "rb") as f:
+            data = f.read()
+        
         bytes_acked = 0
         total_bytes = len(data)
         current_packet_number = 0
