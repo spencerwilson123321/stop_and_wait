@@ -1,13 +1,13 @@
 import traceback
 import sys
 import time
-import configparser
 import os
+import argparse
 from socket import socket, AF_INET, SOCK_DGRAM
 from packet import *
 
 
-class Sender:
+class Client:
 
     # Retransmission Timer Constants
     ALPHA = 0.125
@@ -15,16 +15,15 @@ class Sender:
     K = 4
     BUFFSIZE = 4096
 
-    def __init__(self, configuration):
-        self.receiver_address = (configuration["receiver"]["ip"], int(configuration["receiver"]["port"]))
-        self.sender_address = (configuration["sender"]["ip"], int(configuration["sender"]["port"]))
+    def __init__(self, server_ip: str, server_port: int):
+        self._server_address = (server_ip, server_port)
 
         self.rto = 1.0 # Retransmission Timeout Threshold
         self.srtt = None # Smoothed RTT
         self.vrtt = None # RTT Variance
 
         self.socket = socket(AF_INET, SOCK_DGRAM)
-        self.socket.bind(self.sender_address)
+        self.socket.bind(('', 0))
         self.socket.setblocking(0)
 
         self.PAYLOAD_SIZE = 255
@@ -47,13 +46,13 @@ class Sender:
 
 
     def send(self, packet):
-        self.socket.sendto(packet.serialize(), self.receiver_address)
+        self.socket.sendto(packet.serialize(), self._server_address)
         start = time.perf_counter()
         waiting = True
         while waiting:
             if time.perf_counter() - start >= self.rto:
                 self.on_timeout()
-                self.socket.sendto(packet.serialize(), self.receiver_address)
+                self.socket.sendto(packet.serialize(), self._server_address)
                 start = time.perf_counter()
             try:
                 response, address = self.socket.recvfrom(self.BUFFSIZE)
@@ -105,26 +104,17 @@ class Sender:
         self.socket.close()
 
 if __name__ == '__main__':
-
+    parser = argparse.ArgumentParser(prog="client.py", description="Sends a file to a server using a custom stop and wait protocol.")
+    parser.add_argument("ip")
+    parser.add_argument("port", type=int)
+    parser.add_argument("filepath")
+    args = parser.parse_args()
     try:
-        CONFIG = configparser.ConfigParser()
-        CONFIG.read("config.ini")
-        sender = Sender(CONFIG)
-
-        try:
-            file = sys.argv[1]
-        except Exception:
-            print("Missing program argument.")
-            print("Usage: ./sender.py <filepath>")
+        client = Client(args.ip, args.port)
+        if not os.path.isfile(args.filepath):
+            print(f"File not found: {args.filepath}")    
             exit(1)
-        
-        if not os.path.isfile(file):
-            print(f"File not found: {file}")    
-            exit(1)
-
-        sender.transmit(sys.argv[1])
+        client.transmit(args.filepath)
     except KeyboardInterrupt:
-        print("\nShutting down sender...")
-    except Exception:
-        traceback.print_exc(file=sys.stdout)
-    sys.exit(-1)
+        print("\nShutting down client...")
+
